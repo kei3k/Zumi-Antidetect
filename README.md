@@ -2,7 +2,7 @@
 
 A desktop antidetect browser manager built with **Python** + **CustomTkinter** + **Camoufox**.
 
-Manage multiple browser profiles with unique fingerprints, persistent sessions, proxy support, and Hidemium data sync.
+Manage multiple browser profiles with unique fingerprints, persistent sessions, proxy support, and built-in bookmark bar.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)
 ![Camoufox](https://img.shields.io/badge/Engine-Camoufox-orange)
@@ -12,105 +12,117 @@ Manage multiple browser profiles with unique fingerprints, persistent sessions, 
 
 | Feature | Description |
 |---------|-------------|
-| **Multi-Profile Management** | Manage 90+ browser profiles from one dashboard |
+| **Multi-Profile Management** | Create and manage unlimited browser profiles |
 | **Persistent Fingerprints** | Each profile gets a unique Firefox fingerprint, saved permanently |
 | **Persistent Sessions** | Cookies, bookmarks, history saved between sessions |
 | **Proxy Management** | Set/edit/test proxies per profile with latency check |
-| **Hidemium Sync** | Import profiles + cookies from Hidemium Browser |
-| **Bookmark Bar** | Built-in bookmark bar with click-to-copy |
-| **Dark Theme UI** | Hidemium-inspired cyberpunk dark theme |
+| **Bookmark Bar** | Built-in bookmark bar — click to copy URL |
+| **Hidemium Sync** | (Optional) Import profiles + cookies from Hidemium |
+| **Dark Theme UI** | Premium cyberpunk dark theme |
 
-## 🚀 Quick Start
+---
 
-### 1. Clone
+## 🚀 Cài đặt mới (Fresh Install)
+
+### Bước 1: Cài Python
+Tải từ https://www.python.org/downloads/ → Cài đặt, **tick ✅ "Add to PATH"**
+
+### Bước 2: Clone repo
 ```bash
 git clone https://github.com/kei3k/Zumi-Antidetect.git
 cd Zumi-Antidetect
 ```
 
-### 2. Install Dependencies
+### Bước 3: Cài dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Install Camoufox Browser
+### Bước 4: Cài Camoufox browser
 ```bash
 python -m camoufox fetch
 ```
 
-### 4. Configure Profile Path
-Edit `main_app.py` line 28 — set `PROFILES_ROOT` to your Hidemium profiles folder:
-```python
-PROFILES_ROOT = r"D:\Your\Path\To\ProfilesData\your-uuid"
-```
-
-### 5. Run
+### Bước 5: Chạy
 ```bash
 python main_app.py
 ```
-Or double-click `start.bat`.
+Hoặc click đúp file **`start.bat`**
 
-## 📸 Screenshots
+> ✅ Không cần cấu hình gì thêm. Profiles tự tạo trong thư mục `profiles/`.
 
-*Coming soon*
+---
 
-## 🏗️ Architecture
+## 🔄 Cập nhật (Update)
+
+Khi có bản mới, chạy lệnh sau trong thư mục Zumi-Antidetect:
+
+```bash
+git pull origin main
+```
+
+Nếu có dependencies mới:
+```bash
+pip install -r requirements.txt
+```
+
+> ⚠️ Data profiles, bookmarks, proxies của anh **KHÔNG bị mất** khi update — chúng nằm trong `.gitignore`.
+
+---
+
+## 📸 Cách sử dụng
+
+### Tạo Profile mới
+1. Bấm **+ New Profile** trên thanh action
+2. Nhập tên, proxy (tuỳ chọn), ghi chú → **Create**
+
+### Mở Profile
+- Bấm **Start** → Camoufox mở với fingerprint riêng
+- Lần đầu: tạo fingerprint + browser data mới
+- Lần sau: **load lại toàn bộ session** (cookies, login, history)
+
+### Quản lý Proxy
+- Click **Proxy** trên sidebar → chỉnh proxy cho từng profile
+- Bấm **Test** để kiểm tra proxy sống/chết
+
+### Bookmark Bar
+- Bấm **+** trên thanh bookmark → thêm Name + URL
+- **Click** bookmark → Copy URL vào clipboard → paste vào trình duyệt
+- **Chuột phải** → xóa bookmark
+
+### Đồng bộ Hidemium (Tuỳ chọn)
+- Nếu có Hidemium đang chạy, bấm **Sync** để nhập profiles + cookies
+- Không bắt buộc — tool hoạt động độc lập
+
+---
+
+## 🏗️ Cấu trúc
 
 ```
 Zumi-Antidetect/
-├── main_app.py          ← Core app (UI + Profile Manager + Camoufox launcher)
-├── start.bat            ← One-click launcher (auto-installs deps)
-├── requirements.txt     ← Python dependencies
-├── scripts/
-│   ├── api_server.py    ← FastAPI backend (optional)
-│   ├── explore_hidemium.py
-│   ├── inspect_cookies.py
-│   ├── inspect_db.py
-│   ├── migrate_himenium.py
-│   └── probe_api.py
-└── (auto-generated at runtime)
-    ├── hidemium_cache.json
-    ├── profile_proxies.json
-    ├── bookmarks.json
-    └── fingerprint.json (per profile)
+├── main_app.py          ← App chính
+├── start.bat            ← Launcher (auto cài deps)
+├── requirements.txt     ← Dependencies
+├── scripts/             ← Utilities
+└── profiles/            ← (auto tạo) Data profiles
+    ├── <uuid>/
+    │   ├── fingerprint.json    ← Fingerprint cố định
+    │   └── browser_data/       ← Cookies, bookmarks, history
+    └── ...
 ```
 
-## 🔧 How It Works
+---
 
-### Fingerprint Persistence
-- First launch: generates a **unique Firefox fingerprint** via `browserforge`
-- Saved as `fingerprint.json` inside each profile folder
-- All future launches use the **same fingerprint** — websites see the same "device"
-
-### Persistent Browser Sessions
-- Uses Camoufox `persistent_context` with dedicated `browser_data/` per profile
-- Cookies, localStorage, bookmarks, history — all saved to disk
-- Second launch = **instant session restore** (no re-login needed)
-
-### Hidemium Integration
-- Syncs profile names, proxies, notes from Hidemium API (port 2222)
-- Imports cookies from Hidemium's SQLite databases
-- Falls back to cached data when Hidemium is offline
-
-## 📋 Requirements
+## 📋 Yêu cầu hệ thống
 
 - **Python** 3.10+
 - **Windows** 10/11
-- **Camoufox** (auto-installed via pip)
-- **Hidemium** (optional, for profile sync)
-
-## 🎮 Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| Close browser | Click **Stop** in Zumi app or `Alt+F4` |
-| Minimize | `Alt+Space` → `N` |
-| Copy bookmark URL | Click bookmark pill in bar |
-| Delete bookmark | Right-click bookmark pill |
+- **RAM** 4GB+
+- **Camoufox** (tự cài qua pip)
 
 ## 📄 License
 
-MIT License — feel free to use and modify.
+MIT License
 
 ---
 *Built with ❤️ by Zumi Team*

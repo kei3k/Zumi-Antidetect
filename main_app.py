@@ -25,11 +25,12 @@ import customtkinter as ctk
 #  CONFIG
 # ══════════════════════════════════════════════════════
 
-PROFILES_ROOT    = r"D:\K\HIDEMIUM_4\ProfilesData\2236226b-3617-47ec-a77e-5fa031f16782"
 APP_DATA_DIR     = os.path.dirname(os.path.abspath(__file__))
+PROFILES_ROOT    = os.path.join(APP_DATA_DIR, "profiles")
 NOTES_FILE       = os.path.join(APP_DATA_DIR, "profile_notes.json")
 PROXY_FILE       = os.path.join(APP_DATA_DIR, "profile_proxies.json")
 TAGS_FILE        = os.path.join(APP_DATA_DIR, "profile_tags.json")
+NAMES_FILE       = os.path.join(APP_DATA_DIR, "profile_names.json")
 BOOKMARKS_FILE   = os.path.join(APP_DATA_DIR, "bookmarks.json")
 HIDEMIUM_CACHE   = os.path.join(APP_DATA_DIR, "hidemium_cache.json")
 HIDEMIUM_API_URL = "http://127.0.0.1:2222"
@@ -184,7 +185,7 @@ class HidemiumAPI:
 # ══════════════════════════════════════════════════════
 
 class ProfileManager:
-    """Scan profiles, launch/stop via Hidemium API, test proxy."""
+    """Scan profiles, launch/stop via Camoufox. Hidemium sync optional."""
 
     def __init__(self):
         self._running: set = set()  # Set of running profile UUIDs
@@ -192,13 +193,15 @@ class ProfileManager:
         self._notes:   Dict[str, str] = {}
         self._proxies: Dict[str, str] = {}
         self._tags:    Dict[str, str] = {}
+        self._names:   Dict[str, str] = {}  # Local profile names
         self._hidemium = HidemiumAPI()
-        self._api_data: Dict[str, dict] = {}  # uuid -> API data
+        self._api_data: Dict[str, dict] = {}  # uuid -> API data (optional)
+        os.makedirs(PROFILES_ROOT, exist_ok=True)
         self._load_json()
 
     # --- JSON persistence ---------------------------------------------------
     def _load_json(self):
-        for attr, path in [("_notes", NOTES_FILE), ("_proxies", PROXY_FILE), ("_tags", TAGS_FILE)]:
+        for attr, path in [("_notes", NOTES_FILE), ("_proxies", PROXY_FILE), ("_tags", TAGS_FILE), ("_names", NAMES_FILE)]:
             try:
                 if os.path.exists(path):
                     with open(path, "r", encoding="utf-8") as f:
@@ -216,11 +219,13 @@ class ProfileManager:
     def save_notes(self):   self._save("_notes",   NOTES_FILE)
     def save_proxies(self): self._save("_proxies", PROXY_FILE)
     def save_tags(self):    self._save("_tags",    TAGS_FILE)
+    def _save_names(self):  self._save("_names",   NAMES_FILE)
 
     # --- Setters -------------------------------------------------------------
     def set_note(self, pid, v):  self._notes[pid]=v;   self.save_notes()
     def set_proxy(self, pid, v): self._proxies[pid]=v;  self.save_proxies()
     def set_tag(self, pid, v):   self._tags[pid]=v;     self.save_tags()
+    def set_name(self, pid, v):  self._names[pid]=v;    self._save_names()
 
     # --- Hidemium API sync ---------------------------------------------------
     def sync_from_hidemium(self):
@@ -234,7 +239,7 @@ class ProfileManager:
         if not os.path.exists(PROFILES_ROOT):
             return profiles
 
-        # Use cached API data
+        # Use cached API data (optional — may be empty)
         api = self._api_data or self._hidemium._cache
 
         for pid in sorted(os.listdir(PROFILES_ROOT)):
@@ -244,11 +249,11 @@ class ProfileManager:
 
             is_running = pid in self._running
 
-            # Merge: API data > local overrides > defaults
+            # Merge: local name > API data > defaults
             api_info = api.get(pid, {})
 
-            # Name: API name or fallback
-            name = api_info.get("name") or f"Profile-{pid[:8]}"
+            # Name: local _name file > API name > fallback
+            name = self._names.get(pid) or api_info.get("name") or f"Profile-{pid[:8]}"
 
             # Proxy: local override > API > default
             proxy = self._proxies.get(pid) or api_info.get("proxy") or "Direct"
@@ -295,11 +300,11 @@ class ProfileManager:
 
     # --- Launch / Stop via Camoufox (Free, Open-Source) -----------------------
     def _read_hidemium_cookies(self, profile_id: str) -> list:
-        """Read ALL cookies from Hidemium profile (Network + Extension + SafeBrowsing)."""
+        """Read cookies from Hidemium profile if available (optional)."""
         cookies = []
         profile_dir = os.path.join(PROFILES_ROOT, profile_id)
 
-        # All known cookie SQLite files in a Hidemium (Chromium) profile
+        # Hidemium (Chromium) cookie files — skip if not present
         cookie_files = [
             os.path.join(profile_dir, "Default", "Network", "Cookies"),             # Main login cookies
             os.path.join(profile_dir, "Default", "Extension Cookies"),               # Extension cookies
@@ -547,10 +552,9 @@ class ProfileManager:
             self._notes[new_id] = notes
             self.save_notes()
 
-        # Save name to hidemium cache so it displays
-        self._hidemium._cache[new_id] = {"name": name or f"Profile-{new_id[:8]}", "proxy": proxy, "note": notes}
-        self._hidemium._save_cache()
-        self._api_data = self._hidemium._cache
+        # Save name locally
+        self._names[new_id] = name or f"Profile-{new_id[:8]}"
+        self._save_names()
 
         return {"ok": True, "id": new_id, "msg": f"Created: {name or new_id[:8]}"}
 
