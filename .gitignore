@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Node
+node_modules/
+package-lock.json
+
+# User data (DO NOT commit)
+hidemium_cache.json
+profile_proxies.json
+profile_notes.json
+profile_tags.json
+bookmarks.json
+profiles/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Logs
+*.log
+
+# Dashboard build artifacts
+dashboard/dist/
