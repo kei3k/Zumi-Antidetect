@@ -26,7 +26,7 @@ import customtkinter as ctk
 # ══════════════════════════════════════════════════════
 
 APP_DATA_DIR     = os.path.dirname(os.path.abspath(__file__))
-PROFILES_ROOT    = os.path.join(APP_DATA_DIR, "profiles")
+PROFILES_ROOT    = r"D:\K\HIDEMIUM_4\ProfilesData\2236226b-3617-47ec-a77e-5fa031f16782"
 NOTES_FILE       = os.path.join(APP_DATA_DIR, "profile_notes.json")
 PROXY_FILE       = os.path.join(APP_DATA_DIR, "profile_proxies.json")
 TAGS_FILE        = os.path.join(APP_DATA_DIR, "profile_tags.json")
